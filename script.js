@@ -4,6 +4,7 @@ const form = document.getElementById('search-form');
 const cityInput = document.getElementById('city-input');
 const currentWeatherDiv = document.getElementById('current-weather');
 const forecastDiv = document.getElementById('forecast');
+const loadingDiv = document.getElementById('loading');
 
 async function getWeatherIcon(iconCode) {
   // Webpack will bundle all files matching this pattern
@@ -47,21 +48,34 @@ async function displayForecast(forecastArray) {
 
 
 // Update form submit handler to display instead of console.log
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const city = cityInput.value.trim();
   if (!city) return;
 
-  const rawWeather = await getWeatherByCity(city);
-  if (rawWeather) {
-    const weather = processCurrentWeather(rawWeather);
-    await displayCurrentWeather(weather);
-  }
-  
-  const rawForecast = await getForecastByCity(city);
-  if (rawForecast) {
-    const forecast = processForecast(rawForecast);
-    await displayForecast(forecast);
+  // 1. Show loading, hide old results
+  loadingDiv.classList.remove('hidden');
+  currentWeatherDiv.innerHTML = '';
+  forecastDiv.innerHTML = '';
+
+  try {
+    const rawWeather = await getWeatherByCity(city);
+    if (rawWeather) {
+      const weather = processCurrentWeather(rawWeather);
+      await displayCurrentWeather(weather);
+    }
+    
+    const rawForecast = await getForecastByCity(city);
+    if (rawForecast) {
+      const forecast = processForecast(rawForecast);
+      await displayForecast(forecast);
+    }
+  } catch (error) {
+    currentWeatherDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+  } finally {
+    // 2. Hide loading no matter what - success or error
+    loadingDiv.classList.add('hidden');
   }
   
   cityInput.value = '';
