@@ -43,3 +43,61 @@ async function getForecastByCity(city) {
 // Test it - remove later when we add search input
 getWeatherByCity('Lagos');
 getForecastByCity('Lagos');
+
+
+
+// Process current weather JSON → clean object
+function processCurrentWeather(data) {
+  return {
+    city: data.name,
+    country: data.sys.country,
+    temp: Math.round(data.main.temp),
+    feelsLike: Math.round(data.main.feels_like),
+    description: data.weather[0].description,
+    icon: data.weather[0].icon,
+    humidity: data.main.humidity,
+    windSpeed: data.wind.speed,
+    timestamp: data.dt
+  };
+}
+
+// Process 5-day forecast JSON → array of daily objects
+function processForecast(data) {
+  // API returns 3hr intervals. We’ll group by day and take midday forecast
+  const daily = {};
+
+  data.list.forEach(item => {
+    const date = new Date(item.dt * 1000).toDateString();
+
+    // Take the forecast closest to 12:00 PM for each day
+    if (!daily[date] || item.dt_txt.includes('12:00:00')) {
+      daily[date] = {
+        date: date,
+        temp: Math.round(item.main.temp),
+        description: item.weather[0].description,
+        icon: item.weather[0].icon,
+        humidity: item.main.humidity
+      };
+    }
+  });
+
+  // Return first 5 days only
+  return Object.values(daily).slice(0, 5);
+}
+
+// Update test code to use processors
+async function testWeatherApp() {
+  const rawWeather = await getWeatherByCity('Lagos');
+  if (rawWeather) {
+    const cleanWeather = processCurrentWeather(rawWeather);
+    console.log('Processed Current Weather:', cleanWeather);
+  }
+
+  const rawForecast = await getForecastByCity('Lagos');
+  if (rawForecast) {
+    const cleanForecast = processForecast(rawForecast);
+    console.log('Processed Forecast:', cleanForecast);
+  }
+}
+
+testWeatherApp();
