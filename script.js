@@ -2,6 +2,70 @@
 
 const form = document.getElementById('search-form');
 const cityInput = document.getElementById('city-input');
+const currentWeatherDiv = document.getElementById('current-weather');
+const forecastDiv = document.getElementById('forecast');
+
+async function getWeatherIcon(iconCode) {
+  // Webpack will bundle all files matching this pattern
+  const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+  return iconUrl;
+}
+
+// Display current weather on page
+async function displayCurrentWeather(data) {
+  const iconUrl = await getWeatherIcon(data.icon);
+  
+  currentWeatherDiv.innerHTML = `
+    <h2>${data.city}, ${data.country}</h2>
+    <img src="${iconUrl}" alt="${data.description}">
+    <h3>${data.temp}°C</h3>
+    <p>Feels like ${data.feelsLike}°C</p>
+    <p>${data.description}</p>
+    <p>Humidity: ${data.humidity}% | Wind: ${data.windSpeed} m/s</p>
+  `;
+}
+
+// Display 5-day forecast
+async function displayForecast(forecastArray) {
+  forecastDiv.innerHTML = '';
+  
+  for (const day of forecastArray) {
+    const iconUrl = await getWeatherIcon(day.icon);
+    const dayName = new Date(day.date).toLocaleDateString('en', { weekday: 'short' });
+    
+    const card = document.createElement('div');
+    card.className = 'forecast-card';
+    card.innerHTML = `
+      <p>${dayName}</p>
+      <img src="${iconUrl}" alt="${day.description}">
+      <p>${day.temp}°C</p>
+      <p>${day.description}</p>
+    `;
+    forecastDiv.appendChild(card);
+  }
+}
+
+
+// Update form submit handler to display instead of console.log
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const city = cityInput.value.trim();
+  if (!city) return;
+
+  const rawWeather = await getWeatherByCity(city);
+  if (rawWeather) {
+    const weather = processCurrentWeather(rawWeather);
+    await displayCurrentWeather(weather);
+  }
+  
+  const rawForecast = await getForecastByCity(city);
+  if (rawForecast) {
+    const forecast = processForecast(rawForecast);
+    await displayForecast(forecast);
+  }
+  
+  cityInput.value = '';
+});
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault(); // Stop page from reloading
