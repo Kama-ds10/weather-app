@@ -1,3 +1,40 @@
+// Keep all previous API + processor functions above
+
+const form = document.getElementById('search-form');
+const cityInput = document.getElementById('city-input');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault(); // Stop page from reloading
+  
+  const city = cityInput.value.trim();
+  
+  if (!city) {
+    console.log('Please enter a city name');
+    return;
+  }
+
+  console.log(`Searching weather for: ${city}`);
+  
+  // 1. Fetch current weather
+  const rawWeather = await getWeatherByCity(city);
+  if (rawWeather) {
+    const weather = processCurrentWeather(rawWeather);
+    console.log('Current Weather:', weather);
+  }
+  
+  // 2. Fetch forecast
+  const rawForecast = await getForecastByCity(city);
+  if (rawForecast) {
+    const forecast = processForecast(rawForecast);
+    console.log('Forecast:', forecast);
+  }
+  
+  // Clear input after search
+  cityInput.value = '';
+});
+
+// console.log("Weather app loaded ✅");
+
 console.log("Weather app loaded ✅");
 
 
